@@ -9,6 +9,14 @@ import numpy as np
 import cv2 
 import matplotlib.pyplot as plt
 from bbox import bbox_iou
+import os
+
+def save_feature_maps(features, folder, root='./feature_maps/'):
+    path = '{}{}'.format(root,folder)
+    if ( not os.path.exists(path) ):
+        os.makedirs(path)
+    for i, f in enumerate(features[0]):
+        plt.imsave('{}{}/{}.png'.format(root,folder,i), f)
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters())

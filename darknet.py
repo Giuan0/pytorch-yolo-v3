@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from util import count_parameters as count
 from util import convert2cpu as cpu
 from util import predict_transform
+from util import save_feature_maps
 
 class test_net(nn.Module):
     def __init__(self, num_layers, input_size):
@@ -285,8 +286,6 @@ def create_modules(blocks):
     
     return (net_info, module_list)
 
-
-
 class Darknet(nn.Module):
     def __init__(self, cfgfile):
         super(Darknet, self).__init__()
@@ -304,7 +303,7 @@ class Darknet(nn.Module):
         return self.module_list
 
                 
-    def forward(self, x, CUDA):
+    def forward(self, x, CUDA, gfm=False):
         detections = []
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer
@@ -373,8 +372,9 @@ class Darknet(nn.Module):
                     detections = torch.cat((detections, x), 1)
                 
                 outputs[i] = outputs[i-1]
-                
-        
+
+            if(gfm):    
+                save_feature_maps(outputs[i].data, i)
         
         try:
             return detections

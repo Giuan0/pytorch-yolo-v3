@@ -29,18 +29,18 @@ class test_net(nn.Module):
         fwd = nn.Sequential(self.linear_1, *self.middle, self.output)
         return fwd(x)
         
-def get_test_input(input_dim, CUDA):
-    img = cv2.imread("dog-cycle-car.png")
-    img = cv2.resize(img, (input_dim, input_dim)) 
-    img_ =  img[:,:,::-1].transpose((2,0,1))
-    img_ = img_[np.newaxis,:,:,:]/255.0
-    img_ = torch.from_numpy(img_).float()
-    img_ = Variable(img_)
+# def get_test_input(input_dim, CUDA):
+#     img = cv2.imread("dog-cycle-car.png")
+#     img = cv2.resize(img, (input_dim, input_dim)) 
+#     img_ =  img[:,:,::-1].transpose((2,0,1))
+#     img_ = img_[np.newaxis,:,:,:]/255.0
+#     img_ = torch.from_numpy(img_).float()
+#     img_ = Variable(img_)
     
-    if CUDA:
-        img_ = img_.cuda()
-    num_classes
-    return img_
+#     if CUDA:
+#         img_ = img_.cuda()
+#     num_classes
+#     return img_
 
 
 
@@ -73,7 +73,13 @@ def arg_parse():
                         default = "416", type = str)
     parser.add_argument("--scales", dest = "scales", help = "Scales to use for detection",
                         default = "1,2,3", type = str)
-    
+    parser.add_argument("--names", dest = 'names', help = 
+                        "namesfile",
+                        default = "data/coco.names", type = str)
+    parser.add_argument("--gen_feature_maps", dest = 'gfm', help = 
+                        "generate feature maps",
+                        default = False, type = bool)
+
     return parser.parse_args()
 
 if __name__ ==  '__main__':
@@ -110,7 +116,7 @@ if __name__ ==  '__main__':
     CUDA = torch.cuda.is_available()
 
     num_classes = 80
-    classes = load_classes('data/coco.names') 
+    classes = load_classes(args.names) 
 
     #Set up the neural network
     print("Loading network.....")
@@ -174,7 +180,7 @@ if __name__ ==  '__main__':
     
 
     write = False
-    model(get_test_input(inp_dim, CUDA), CUDA)
+    # model(get_test_input(inp_dim, CUDA), CUDA)
     
     start_det_loop = time.time()
     
@@ -195,7 +201,7 @@ if __name__ ==  '__main__':
         # B x (bbox cord x no. of anchors) x grid_w x grid_h --> B x bbox x (all the boxes) 
         # Put every proposed box as a row.
         with torch.no_grad():
-            prediction = model(Variable(batch), CUDA)
+            prediction = model(Variable(batch), CUDA, args.gfm)
         
 #        prediction = prediction[:,scale_indices]
 
@@ -238,6 +244,7 @@ if __name__ ==  '__main__':
 
         for im_num, image in enumerate(imlist[i*batch_size: min((i +  1)*batch_size, len(imlist))]):
             im_id = i*batch_size + im_num
+            print(classes)
             objs = [classes[int(x[-1])] for x in output if int(x[0]) == im_id]
             print("{0:20s} predicted in {1:6.3f} seconds".format(image.split("/")[-1], (end - start)/batch_size))
             print("{0:20s} {1:s}".format("Objects Detected:", " ".join(objs)))

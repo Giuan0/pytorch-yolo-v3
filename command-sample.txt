@@ -1,0 +1,1 @@
+python3 detect.py --images imgs --det det --cfg cfg/yolov3-tiny.cfg --weights weights/yolov3-tiny_20000.weights --names data/periodontal_rad.names
